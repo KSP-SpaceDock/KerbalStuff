@@ -56,10 +56,11 @@ def _restore_game_info() -> Optional[Game]:
     game_id = session.get('gameid')
 
     if game_id:
-        game = Game.query.filter(Game.active == True, Game.id == game_id).one()
+        game = Game.query.filter(Game.active == True, Game.id == game_id).one_or_none()
         # Make sure it's fully set in the session cookie.
-        set_game_info(game)
-        return game
+        if game:
+            set_game_info(game)
+            return game
 
     return None
 
@@ -324,7 +325,7 @@ def export_referrals(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
 @loginrequired
 @with_session
 def delete(mod_id: int) -> werkzeug.wrappers.Response:
-    mod, game = _get_mod_game_info(mod_id)
+    mod, _ = _get_mod_game_info(mod_id)
     editable = False
     if current_user:
         if current_user.admin:
