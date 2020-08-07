@@ -8,8 +8,8 @@
     - https://github.com/miguelgrinberg/Flask-Migrate/issues/155
 """
 
+import sqlalchemy as sa
 from typing import List, Optional
-from sqlalchemy import sa
 
 
 class op:
@@ -49,7 +49,8 @@ class op:
                            source_table: str,
                            referent_table: str,
                            local_cols: List[str],
-                           remote_cols: List[str]) -> None: ...
+                           remote_cols: List[str],
+                           **kwargs: str) -> None: ...
 
     @classmethod
     def drop_constraint(cls,

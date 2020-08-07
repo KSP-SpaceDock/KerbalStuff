@@ -334,14 +334,7 @@ def delete(mod_id: int) -> werkzeug.wrappers.Response:
             editable = True
     if not editable:
         abort(403)
-    db.delete(mod)
-    for featured in Featured.query.filter(Featured.mod_id == mod.id).all():
-        db.delete(featured)
-    for media in Media.query.filter(Media.mod_id == mod.id).all():
-        db.delete(media)
-    for version in ModVersion.query.filter(ModVersion.mod_id == mod.id).all():
-        db.delete(version)
-    db.commit()
+
     storage = _cfg('storage')
     if storage:
         full_path = os.path.join(storage, mod.base_path())
@@ -581,12 +574,14 @@ _create_connection_mutex = threading.Lock()
 def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
     mod, game = _get_mod_game_info(mod_id)
     check_mod_editable(mod)
-    version = [v for v in mod.versions if v.id == int(version_id)]
+    version = ModVersion.query.get(version_id)
     if len(mod.versions) == 1:
         abort(400)
-    if len(version) == 0:
+    if not version:
         abort(404)
-    if version[0].id == mod.default_version_id:
+    if version.id == mod.default_version_id:
+        abort(400)
+    if version.mod != mod:
         abort(400)
 
     protocol = _cfg('protocol')
@@ -601,8 +596,7 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
             global _orig_create_connection
             connection.create_connection = _orig_create_connection
 
-    db.delete(version[0])
-    mod.versions = [v for v in mod.versions if v.id != int(version_id)]
+    db.delete(version)
     db.commit()
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))
 
