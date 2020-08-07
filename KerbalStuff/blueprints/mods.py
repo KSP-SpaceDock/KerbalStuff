@@ -340,14 +340,14 @@ def delete(mod_id: int) -> werkzeug.wrappers.Response:
         db.delete(media)
     for version in ModVersion.query.filter(ModVersion.mod_id == mod.id).all():
         db.delete(version)
-    base_path = os.path.join(secure_filename(mod.user.username) + '_' +
-                             str(mod.user.id), secure_filename(mod.name))
     db.commit()
-    notify_ckan(mod, 'delete', True)
     storage = _cfg('storage')
     if storage:
-        full_path = os.path.join(storage, base_path)
+        full_path = os.path.join(storage, mod.base_path())
         rmtree(full_path)
+    db.delete(mod)
+    db.commit()
+    notify_ckan(mod, 'delete', True)
     return redirect("/profile/" + current_user.username)
 
 

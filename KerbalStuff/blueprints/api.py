@@ -184,18 +184,17 @@ def _update_image(old_path: str, base_name: str, base_path: str) -> Optional[str
 
 def _get_modversion_paths(mod_name: str, friendly_version: str) -> Tuple[str, str]:
     mod_name_sec = secure_filename(mod_name)
-    storage_base = os.path.join(f'{secure_filename(current_user.username)}_{current_user.id!s}',
-                                mod_name_sec)
+    base_path = os.path.join(f'{current_user.base_path()}', mod_name_sec)
     storage = _cfg('storage')
     if not storage:
-        return ('', '')
-    storage_path = os.path.join(storage, storage_base)
+        return '', ''
+    storage_path = os.path.join(storage, base_path)
     filename = f'{mod_name_sec}-{friendly_version}.zip'
     if not os.path.exists(storage_path):
         os.makedirs(storage_path)
     full_path = os.path.join(storage_path, filename)
     # Return tuple of (full path, relative path)
-    return (full_path, os.path.join(storage_base, filename))
+    return full_path, os.path.join(base_path, filename)
 
 
 def serialize_mod_list(mods: Iterable[Mod]) -> Iterable[Dict[str, Any]]:
@@ -459,8 +458,7 @@ def update_mod_background(mod_id: int) -> Dict[str, Any]:
     _check_mod_editable(mod)
     seq_mod_name = secure_filename(mod.name)
     base_name = f'{seq_mod_name}-{time.time()!s}'
-    base_path = os.path.join(f'{secure_filename(mod.user.username)}_{mod.user.id!s}', seq_mod_name)
-    new_path = _update_image(mod.background, base_name, base_path)
+    new_path = _update_image(mod.background, base_name, mod.base_path())
     if new_path:
         mod.background = new_path
         notify_ckan(mod, 'update-background')

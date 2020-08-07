@@ -7,6 +7,7 @@ import bcrypt
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
     ForeignKey, Table, Float
 from sqlalchemy.orm import relationship, backref, reconstructor
+from werkzeug.utils import secure_filename
 
 from . import thumbnail
 from .database import Base
@@ -89,6 +90,9 @@ class User(Base):  # type: ignore
 
     def get_id(self) -> str:
         return self.username
+
+    def base_path(self) -> str:
+        return secure_filename(self.username) + '_' + str(self.id)
 
 
 class UserAuth(Base):  # type: ignore
@@ -194,6 +198,9 @@ class Mod(Base):  # type: ignore
 
     def background_thumb(self) -> str:
         return thumbnail.get_or_create(self.background)
+
+    def base_path(self) -> str:
+        return os.path.join(self.user.base_path(), secure_filename(self.name))
 
     def __repr__(self) -> str:
         return '<Mod %r %r>' % (self.id, self.name)
