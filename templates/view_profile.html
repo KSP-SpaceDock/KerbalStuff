@@ -156,6 +156,10 @@
                             <span class="glyphicon glyphicon-fire"></span>
                             Impersonate user
                         </a>
+                        <a href="#" class="btn btn-danger" data-toggle="modal" data-target="#confirm-delete-account" role="button" style="margin-bottom: 10px; margin-top: 5px;">
+                            <span class="glyphicon glyphicon-fire"></span>
+                            Delete user
+                        </a>
                     {% endif %}
                 </div>
             </div>
@@ -180,6 +184,32 @@
                 <div class="modal-footer">
                     <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
                     <input type="submit" class="btn btn-danger" value="Confirm">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="confirm-delete-account" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+              <h4 class="modal-title">Delete User Account</h4>
+            </div>
+            <form action="#" id="delete-account-form">
+                <div class="modal-body">
+                    <p>Are you really, really, really sure you want to delete that account? It can't be undone. It'll be gone.
+                    This will delete any data associated with this account, including uploaded mods.</p>
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" placeholder="Enter the user's username to confirm" class="form-control"
+                               name="username">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <p id="delete-account-error-message" class="hidden"></p>
+                    <a href="#" class="btn btn-default btn-account-del" data-dismiss="modal">Cancel</a>
+                    <input type="submit" id="delete-user-submit" class="btn btn-danger btn-account-del" value="Delete account">
                 </div>
             </form>
         </div>
@@ -254,4 +284,10 @@
     </div>
 </div>
 {% endif %}
+{% endblock %}
+{% block scripts %}
+    <script>
+        window.username = "{{profile.username}}";
+    </script>
+    <script src="/static/profile.js"></script>
 {% endblock %}

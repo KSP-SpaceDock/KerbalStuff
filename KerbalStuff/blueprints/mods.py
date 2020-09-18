@@ -338,7 +338,7 @@ def delete(mod_id: int) -> werkzeug.wrappers.Response:
     storage = _cfg('storage')
     if storage:
         full_path = os.path.join(storage, mod.base_path())
-        rmtree(full_path)
+        rmtree(full_path, ignore_errors=True)
     db.delete(mod)
     db.commit()
     notify_ckan(mod, 'delete', True)
