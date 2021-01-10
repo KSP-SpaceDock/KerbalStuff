@@ -71,17 +71,6 @@ document.getElementById('mod-license').addEventListener('change', () ->
 $('[data-toggle="tooltip"]').tooltip()
 
 
-updategame = ->
-    gid = $("#mod-game option:selected").attr("value")
-    # TODO: don't hardcode the production game id here.
-    #       Do we have a game.ckan_enabled property?
-    if gid != "3102"
-        # if not ksp then hide ckan checkbox
-        $(".ckan").hide()
-    else
-        $(".ckan").show()
-
-
 updategameversions = (gameid) ->
     $.ajax(
         method: "GET",
@@ -99,7 +88,6 @@ $(document).ready ->
     # Check if there's a game preselected, if yes, get the game versions for it.
     preselected = $("#mod-game option:selected").attr("value")
     if preselected != null
-        updategame()
         updategameversions(preselected)
 
 
@@ -118,7 +106,6 @@ $(document).ready ->
         width: '100%'
     )
     $("#mod-game").chosen({width: '100%'}).change(() ->
-        updategame()
         updategameversions($(this).val())
     )
 

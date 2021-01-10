@@ -141,6 +141,7 @@ class Game(Base):  # type: ignore
     bgOffsetX = Column(Integer)
     bgOffsetY = Column(Integer)
     link = Column(Unicode(1024))
+    ckan_enabled = Column(Boolean, default=False, index=True)
 
     # Match beginnings of words and capital letters (for StudlyCapsNames)
     ABBREV_PATTERN = re.compile('\\b\\w|[A-Z]')

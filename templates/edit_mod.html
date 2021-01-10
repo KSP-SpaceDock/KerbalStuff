@@ -176,7 +176,7 @@
     <div class="container" style="margin-top: 2.5mm;">
         <p>
             <span class="col-md-10 form-group"><a target="_blank" href="/markdown">Markdown</a> is supported here.</span>
-            {% if not mod.ckan %}
+            {% if mod.game.ckan_enabled and not mod.ckan %}
             <label>
                 <input id="ckan" name="ckan" style="margin-top: 8px;" type="checkbox"> Add mod to <a target="_blank" href="https://github.com/KSP-CKAN/CKAN">CKAN</a>
                 <span data-original-title="This makes it so that users can automate the installation of your mod. Your mod won't be added to CKAN until you publish it." class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="left" title=""></span>

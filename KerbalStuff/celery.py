@@ -6,7 +6,7 @@ from celery import Celery
 
 from .common import with_session
 from .config import _cfg, _cfgi, _cfgb, site_logger
-from .objects import Mod
+from .objects import Game, Mod
 from .search import get_mod_score
 from .ckan import import_ksp_versions_from_ckan
 
@@ -110,9 +110,9 @@ def calculate_mod_scores() -> None:
 @app.task
 @with_session
 def ckan_version_import() -> None:
-    game_id = _cfgi('ksp-game-id', -1)
-    if game_id > 0:
-        import_ksp_versions_from_ckan(game_id)
+    game = Game.query.filter(Game.ckan_enabled == True).first()
+    if game:
+        import_ksp_versions_from_ckan(game.id)
 
 # to debug this:
 # * add PTRACE capability to celery container via docker-compose.yaml

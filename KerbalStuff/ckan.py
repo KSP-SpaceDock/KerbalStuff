@@ -9,7 +9,7 @@ from .objects import Mod, Game, GameVersion
 from .database import db
 
 CKAN_BUILDS_URL = 'https://github.com/KSP-CKAN/CKAN-meta/raw/master/builds.json'
-MAJOR_MINOR_PATCH_PATTERN = re.compile('^([^.]+\.[^.]+\.[^.]+)')
+MAJOR_MINOR_PATCH_PATTERN = re.compile(r'^([^.]+\.[^.]+\.[^.]+)')
 
 
 def send_to_ckan(mod: Mod) -> None:
@@ -17,7 +17,7 @@ def send_to_ckan(mod: Mod) -> None:
     domain = _cfg('domain')
     url = _cfg('create-url')
     site_name = _cfg('site-name')
-    if mod.ckan and mod.published and url and protocol and domain and site_name:
+    if mod.game.ckan_enabled and mod.ckan and mod.published and url and protocol and domain and site_name:
         site_base_url = protocol + "://" + domain
         _bg_post(url, {
             'name': mod.name,
@@ -36,7 +36,7 @@ def send_to_ckan(mod: Mod) -> None:
 
 def notify_ckan(mod: Mod, event_type: str) -> None:
     url = _cfg("notify-url")
-    if mod.ckan and mod.published and url:
+    if mod.game.ckan_enabled and mod.ckan and mod.published and url:
         _bg_post(url, {
             'mod_id': mod.id,
             'event_type': event_type,

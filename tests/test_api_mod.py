@@ -21,6 +21,7 @@ def test_api_mod(client: 'FlaskClient[Response]') -> None:
         ),
         short='kerbal-space-program',
         active=True,
+        ckan_enabled=True,
     )
     mod = Mod(
         name='Test Mod',

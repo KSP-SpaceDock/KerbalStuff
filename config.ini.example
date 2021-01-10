@@ -25,10 +25,6 @@ domain=localhost:5080
 # Change this value to something random and secret
 secret-key=hello world
 
-# Set this to the id of the Game that represents KSP.
-# Its GameVersions will automatically sync up with CKAN's KSP builds.json.
-ksp-game-id=
-
 # Enable offloading of downloads to the reverse proxy server. Make sure the reverse proxy is set up!
 # valid values are:
 # false - disable offloading

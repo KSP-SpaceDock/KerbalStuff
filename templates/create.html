@@ -89,11 +89,13 @@
             <div class="col-md-4">
             </div>
             <div class="col-md-8 form-group">
+                {% if ga.ckan_enabled %}
                 <label class="ckan">
                     <input type="checkbox" id="ckan" name="ckan" style="margin-top: 8px;"> Add mod to <a href="https://github.com/KSP-CKAN/CKAN">CKAN</a>
                     <span class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="left"
                         title="This makes it so that users can automate the installation of your mod. Your mod won't be added to CKAN until you publish it."></span>
                 </label>
+                {% endif %}
             </div>
         </div>
         <div class="row">

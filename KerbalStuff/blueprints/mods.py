@@ -249,7 +249,7 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         if ckan is None:
             ckan = False
         else:
-            ckan = (ckan.lower() in TRUE_STR)
+            ckan = game.ckan_enabled and (ckan.lower() in TRUE_STR)
         if ckan:
             if not mod.ckan:
                 mod.ckan = ckan

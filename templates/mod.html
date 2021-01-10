@@ -41,7 +41,7 @@
         <div class="col-md-8">
             <h1 title="{{ mod.name }}">
                 {{ mod.name }}
-                {% if mod.ckan %}
+                {% if mod.game.ckan_enabled and mod.ckan %}
                 <span class="badge" title="This mod is listed in CKAN.">CKAN</span>
                 {% endif %}
             </h1>
