@@ -4,11 +4,12 @@ import time
 import zipfile
 from datetime import datetime
 from functools import wraps
+from shutil import rmtree
 from typing import Dict, Any, Callable, Optional, Tuple, Iterable, List, Union
 
 import bcrypt
 from flask import Blueprint, url_for, current_app, request, abort
-from flask_login import login_user, current_user
+from flask_login import login_user, current_user, logout_user
 from sqlalchemy import desc, asc
 from werkzeug.utils import secure_filename
 
@@ -184,18 +185,17 @@ def _update_image(old_path: str, base_name: str, base_path: str) -> Optional[str
 
 def _get_modversion_paths(mod_name: str, friendly_version: str) -> Tuple[str, str]:
     mod_name_sec = secure_filename(mod_name)
-    storage_base = os.path.join(f'{secure_filename(current_user.username)}_{current_user.id!s}',
-                                mod_name_sec)
+    base_path = os.path.join(f'{current_user.base_path()}', mod_name_sec)
     storage = _cfg('storage')
     if not storage:
-        return ('', '')
-    storage_path = os.path.join(storage, storage_base)
+        return '', ''
+    storage_path = os.path.join(storage, base_path)
     filename = f'{mod_name_sec}-{friendly_version}.zip'
     if not os.path.exists(storage_path):
         os.makedirs(storage_path)
     full_path = os.path.join(storage_path, filename)
     # Return tuple of (full path, relative path)
-    return (full_path, os.path.join(storage_base, filename))
+    return full_path, os.path.join(base_path, filename)
 
 
 def serialize_mod_list(mods: Iterable[Mod]) -> Iterable[Dict[str, Any]]:
@@ -450,6 +450,40 @@ def change_password(username: str) -> Union[Dict[str, Any], Tuple[Union[str, Any
     return {'error': True, 'reason': pw_message}
 
 
+@api.route("/api/user/<username>/delete", methods=['POST'])
+@with_session
+@user_required
+@json_output
+def delete(username: str) -> Dict[str, Any]:
+    deletable = False
+    if current_user:
+        if current_user.admin:
+            deletable = True
+        if current_user.username == username:
+            deletable = True
+    if not deletable:
+        return {'error': True, 'reason': 'Unauthorized'}
+
+    form_username = request.form.get('username')
+    if form_username != username:
+        return {'error': True, 'reason': 'Wrong username'}
+
+    user = User.query.filter(User.username == username).one_or_none()
+    if not user:
+        return {'error': True, 'reason': 'User does not exist'}
+
+    storage = _cfg('storage')
+    if storage:
+        full_path = os.path.join(storage, user.base_path())
+        rmtree(full_path, ignore_errors=True)
+
+    db.delete(user)
+    if user == current_user:
+        logout_user()
+
+    return {"error": False}
+
+
 @api.route('/api/mod/<int:mod_id>/update-bg', methods=['POST'])
 @with_session
 @json_output
@@ -459,8 +493,7 @@ def update_mod_background(mod_id: int) -> Dict[str, Any]:
     _check_mod_editable(mod)
     seq_mod_name = secure_filename(mod.name)
     base_name = f'{seq_mod_name}-{time.time()!s}'
-    base_path = os.path.join(f'{secure_filename(mod.user.username)}_{mod.user.id!s}', seq_mod_name)
-    new_path = _update_image(mod.background, base_name, base_path)
+    new_path = _update_image(mod.background, base_name, mod.base_path())
     if new_path:
         mod.background = new_path
         notify_ckan(mod, 'update-background')

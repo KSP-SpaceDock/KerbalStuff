@@ -56,10 +56,11 @@ def _restore_game_info() -> Optional[Game]:
     game_id = session.get('gameid')
 
     if game_id:
-        game = Game.query.filter(Game.active == True, Game.id == game_id).one()
+        game = Game.query.filter(Game.active == True, Game.id == game_id).one_or_none()
         # Make sure it's fully set in the session cookie.
-        set_game_info(game)
-        return game
+        if game:
+            set_game_info(game)
+            return game
 
     return None
 
@@ -324,7 +325,7 @@ def export_referrals(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
 @loginrequired
 @with_session
 def delete(mod_id: int) -> werkzeug.wrappers.Response:
-    mod, game = _get_mod_game_info(mod_id)
+    mod, _ = _get_mod_game_info(mod_id)
     editable = False
     if current_user:
         if current_user.admin:
@@ -333,21 +334,14 @@ def delete(mod_id: int) -> werkzeug.wrappers.Response:
             editable = True
     if not editable:
         abort(403)
-    db.delete(mod)
-    for featured in Featured.query.filter(Featured.mod_id == mod.id).all():
-        db.delete(featured)
-    for media in Media.query.filter(Media.mod_id == mod.id).all():
-        db.delete(media)
-    for version in ModVersion.query.filter(ModVersion.mod_id == mod.id).all():
-        db.delete(version)
-    base_path = os.path.join(secure_filename(mod.user.username) + '_' +
-                             str(mod.user.id), secure_filename(mod.name))
-    db.commit()
-    notify_ckan(mod, 'delete', True)
+
     storage = _cfg('storage')
     if storage:
-        full_path = os.path.join(storage, base_path)
-        rmtree(full_path)
+        full_path = os.path.join(storage, mod.base_path())
+        rmtree(full_path, ignore_errors=True)
+    db.delete(mod)
+    db.commit()
+    notify_ckan(mod, 'delete', True)
     return redirect("/profile/" + current_user.username)
 
 
@@ -580,12 +574,14 @@ _create_connection_mutex = threading.Lock()
 def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
     mod, game = _get_mod_game_info(mod_id)
     check_mod_editable(mod)
-    version = [v for v in mod.versions if v.id == int(version_id)]
+    version = ModVersion.query.get(version_id)
     if len(mod.versions) == 1:
         abort(400)
-    if len(version) == 0:
+    if not version:
         abort(404)
-    if version[0].id == mod.default_version_id:
+    if version.id == mod.default_version_id:
+        abort(400)
+    if version.mod != mod:
         abort(400)
 
     protocol = _cfg('protocol')
@@ -600,8 +596,7 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
             global _orig_create_connection
             connection.create_connection = _orig_create_connection
 
-    db.delete(version[0])
-    mod.versions = [v for v in mod.versions if v.id != int(version_id)]
+    db.delete(version)
     db.commit()
     return redirect(url_for("mods.mod", mod_id=mod.id, mod_name=mod.name, ga=game))
 

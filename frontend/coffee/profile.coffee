@@ -94,3 +94,58 @@ resetPasswordModalDialog = () ->
         button.removeAttribute('disabled')
 
 $('#change-password').on('hidden.bs.modal', resetPasswordModalDialog)
+
+
+# Handling of the delete-account dialog
+$('#delete-account-form').submit((e) ->
+    e.preventDefault()
+
+    # Disable the buttons until we get an response
+    buttons = document.getElementsByClassName('btn-account-del')
+    for button in buttons
+        button.setAttribute('disabled', '')
+
+    form_username = $('#username').val()
+
+    xhr = new XMLHttpRequest()
+    xhr.open('POST', "/api/user/#{window.username}/delete")
+    # Triggered after we get an response from the server.
+    # It's in the form {'error': bool, 'reason': string)
+    xhr.onload = () ->
+        result = JSON.parse(this.responseText)
+        error_message_display = $('#delete-account-error-message')
+
+        if result.error == true
+            error_message_display.html(result.reason)
+            error_message_display.addClass('text-danger')
+            error_message_display.removeClass('hidden')
+            # Re-enable the buttons.
+            for button in buttons
+                button.removeAttribute('disabled')
+        else
+            error_message_display.html('Account deleted successfully.')
+            error_message_display.removeClass('text-danger')
+            error_message_display.addClass('text-success')
+            error_message_display.removeClass('hidden')
+            # .modal('hide') doesn't work. Let's reload the page instead.
+            # Delay it a bit to give the user a chance to read the response message.
+            setTimeout((() -> window.location = '/'), 1000)
+
+    form = new FormData()
+    form.append('username', form_username)
+    xhr.send(form)
+)
+
+deleteAccountModalDialog = () ->
+    $('#delete-account-form').trigger('reset')
+    error_message_display = $('#delete-account-error-message')
+    error_message_display.html('')
+    error_message_display.removeClass('text-danger')
+    error_message_display.removeClass('text-success')
+    error_message_display.addClass('hidden')
+
+    buttons = document.getElementsByClassName('btn-account-del')
+    for button in buttons
+        button.removeAttribute('disabled')
+
+$('#delete-account').on('hidden.bs.modal', deleteAccountModalDialog)

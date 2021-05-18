@@ -158,9 +158,7 @@ def migrate_backgrounds():
             print("Handling {} ({} of {})".format(mod.name, index + 1, total))
             filetype = os.path.splitext(os.path.basename(mod.background))[1]
             filename = secure_filename(mod.name) + filetype
-            base_path = os.path.join(secure_filename(mod.user.username) + '_' + str(mod.user.id),
-                                     secure_filename(mod.name))
-            mod.background = _migrate_bg(mod.background, base_path, filename)
+            mod.background = _migrate_bg(mod.background, mod.base_path(), filename)
             db.commit()
 
 
@@ -173,8 +171,7 @@ def migrate_profiles():
             print("Handling {} ({} of {})".format(user.username, index + 1, total))
             filetype = os.path.splitext(os.path.basename(user.backgroundMedia))[1]
             filename = secure_filename(user.username) + filetype
-            base_path = os.path.join(secure_filename(user.username) + '_' + str(user.id))
-            user.backgroundMedia = _migrate_bg(user.backgroundMedia, base_path, filename)
+            user.backgroundMedia = _migrate_bg(user.backgroundMedia, user.base_path(), filename)
             db.commit()
 
 
