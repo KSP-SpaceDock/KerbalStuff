@@ -16,14 +16,11 @@
 <div class="container lead">
     <div class="row">
         <div class="col-md-8">
-            <h3 title="{{ mod_list.name }}">
-                {{ mod_list.name }}
-                <br/>
-                <small>
-                    for {{ mod_list.game.name }},
-                    from <a href='{{url_for("profile.view_profile", username=mod_list.user.username)}}'>{{ mod_list.user.username }}</a>
-                </small>
-            </h3>
+            <h1 title="{{ mod_list.name }}">{{ mod_list.name }}</h1>
+            <h3><small>
+                for {{ mod_list.game.name }},
+                from <a href='{{url_for("profile.view_profile", username=mod_list.user.username)}}'>{{ mod_list.user.username }}</a>
+            </small></h3>
         </div>
         {% if editable %}
             <div class="col-md-4">

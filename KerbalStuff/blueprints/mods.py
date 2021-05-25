@@ -219,8 +219,9 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         return render_template("edit_mod.html", mod=mod, original=original,
                                new=request.args.get('new') is not None and original)
     else:
-        short_description = request.form.get('short-description')
-        license = request.form.get('license')
+        name = request.form.get('name', '')
+        short_description = request.form.get('short-description', '')
+        license = request.form.get('license', '')
         donation_link = request.form.get('donation-link')
         external_link = request.form.get('external-link')
         source_link = request.form.get('source-link')
@@ -228,6 +229,11 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         ckan = request.form.get('ckan')
         background = request.form.get('background')
         bgOffsetY = request.form.get('bg-offset-y', 0)
+        if not name or len(name) > 100 \
+            or not short_description or len(short_description) > 1000 \
+            or not license or len(license) > 128:
+            abort(400)
+        mod.name = name
         mod.license = license
         mod.donation_link = donation_link
         mod.external_link = external_link

@@ -52,9 +52,14 @@
 
     <div class="container lead">
         <div class="row">
+            <h1>Edit Mod</h1>
+        </div>
+        <div class="row">
             <div class="col-md-8">
-                <h1 title="{{ mod.name }}">Edit {{ mod.name }}</h1>
-                <input type="text" class="form-control input-block-level" name="short-description" value="{{ mod.short_description }}" placeholder="Short description..." />
+                <label for="name" class="text-muted">Name:</label>
+                <input type="text" class="form-control input-lg" name="name" value="{{mod.name}}" />
+                <label for="short-description" class="text-muted">Description:</label>
+                <input type="text" class="form-control" name="short-description" value="{{ mod.short_description }}" placeholder="Short description..." />
             </div>
             <div class="col-md-4">
                 <input type="submit" class="btn btn-primary btn-block" value="Save Changes" />
