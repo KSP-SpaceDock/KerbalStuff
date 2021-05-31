@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "dropzone": "^5.7.1",
-    "chart.js": "^2.9.3"
+    "chart.js": "^2.9.4"
   },
   "coffeelintConfig": {
     "indentation": {
