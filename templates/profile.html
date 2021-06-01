@@ -104,7 +104,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 profile-right-half">
                     <h3 style="margin: 0; padding: 0; padding-bottom: 5px;">Your description <small><a target="_blank" href="/markdown">Markdown</a> supported</small></h3>
                     <link rel="stylesheet" href="/static/editor.css">
                     <textarea name="description"
@@ -115,13 +115,55 @@
             </div>
         </div>
     </div>
+
+    {% if following %}
+    <div class="container lead">
+        <div class="row">
+            <div class="col-md-3">
+                <h2>Email Settings</h2>
+            </div>
+            <div class="col-md-2">
+                <button type="button" id="check-all-updates" class="btn btn-xs">Check all</button>
+                <button type="button" id="uncheck-all-updates" class="btn btn-xs">Uncheck all</button>
+            </div>
+            <div class="col-md-2">
+                <button type="button" id="check-all-autoupdates" class="btn btn-xs">Check all</button>
+                <button type="button" id="uncheck-all-autoupdates" class="btn btn-xs">Uncheck all</button>
+            </div>
+        </div>
+        <div class="row following-mods-list">
+            {% for fol in following %}
+            <div class="row following-mod">
+                <div class="col-md-3 space-left-right"><small>{{ fol.mod.name }}</small></div>
+                <div class="col-md-2">
+                    <label for="updates-{{fol.mod_id}}" class="text-muted">
+                        <input type="checkbox" {% if fol.send_update %}checked{% endif %}
+                               id="updates-{{fol.mod_id}}"
+                               name="updates-{{fol.mod_id}}">
+                        New releases
+                    </label>
+                </div>
+                <div class="col-md-2">
+                    <label for="autoupdates-{{fol.mod_id}}" class="text-muted">
+                        <input type="checkbox" {% if fol.send_autoupdate %}checked{% endif %}
+                               id="autoupdates-{{fol.mod_id}}"
+                               name="autoupdates-{{fol.mod_id}}">
+                        Compatibility changes
+                    </label>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
 </form>
 
 {%if not hide_login %}
 <div class="container lead">
     <div class="row">
         <div class="col-md-12">
-            <h2 title="change-password">Change Password</h2>
+            <h2>Change Password</h2>
         </div>
     </div>
     <div class="row">
@@ -134,7 +176,7 @@
 <div class="container lead">
     <div class="row">
         <div class="col-md-8">
-            <h2 title="Login">Connected Accounts</h2>
+            <h2>Connected Accounts</h2>
         </div>
 
     </div>

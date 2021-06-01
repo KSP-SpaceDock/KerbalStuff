@@ -5,7 +5,7 @@ from flask import url_for
 from jinja2 import Template
 from werkzeug.utils import secure_filename
 
-from .objects import User, Mod, ModVersion
+from .objects import User, Mod, ModVersion, Following
 from .celery import send_mail
 from .config import _cfg, _cfgd
 
@@ -80,7 +80,9 @@ def send_grant_notice(mod: Mod, user: User) -> None:
 
 
 def send_update_notification(mod: Mod, version: ModVersion, user: User) -> None:
-    followers = [u.email for u in mod.followers]
+    followers = (fol.user.email for fol
+                 in Following.query.filter(Following.mod_id == mod.id,
+                                           Following.send_update == True))
     changelog = version.changelog
     if changelog:
         changelog = '\n'.join(['    ' + line for line in changelog.split('\n')])
@@ -105,7 +107,9 @@ def send_update_notification(mod: Mod, version: ModVersion, user: User) -> None:
 
 
 def send_autoupdate_notification(mod: Mod) -> None:
-    followers = [u.email for u in mod.followers]
+    followers = (fol.user.email for fol
+                 in Following.query.filter(Following.mod_id == mod.id,
+                                           Following.send_autoupdate == True))
     changelog = mod.default_version.changelog
     if changelog:
         changelog = '\n'.join(['    ' + line for line in changelog.split('\n')])

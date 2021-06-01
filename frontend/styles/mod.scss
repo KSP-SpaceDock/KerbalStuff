@@ -193,3 +193,16 @@
         border-radius: 0;
     }
 }
+
+.profile-right-half .CodeMirror {
+    height: 16em;
+}
+
+.following-mods-list {
+    max-height: 15em;
+    overflow-y: auto;
+}
+
+.row.following-mod:nth-of-type(odd) {
+    background-color: #f5f5f5;
+}

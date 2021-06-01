@@ -6,15 +6,22 @@ from typing import Optional
 
 import bcrypt
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
-    ForeignKey, Table, Float, Index, BigInteger
+    ForeignKey, Table, Float, Index, BigInteger, PrimaryKeyConstraint
 from sqlalchemy.orm import relationship, backref, reconstructor
 
 from . import thumbnail
 from .database import Base
 
-mod_followers = Table('mod_followers', Base.metadata,
-                      Column('mod_id', Integer, ForeignKey('mod.id')),
-                      Column('user_id', Integer, ForeignKey('user.id')))
+
+class Following(Base):  # type: ignore
+    __tablename__ = 'mod_followers'
+    __table_args__ = (PrimaryKeyConstraint('user_id', 'mod_id'), )
+    mod_id = Column(Integer, ForeignKey('mod.id'))
+    mod = relationship('Mod', foreign_keys=mod_id)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship('User', foreign_keys=user_id)
+    send_update = Column(Boolean(), default=True)
+    send_autoupdate = Column(Boolean(), default=True)
 
 
 class Featured(Base):  # type: ignore
@@ -63,7 +70,7 @@ class User(Base):  # type: ignore
     backgroundMedia = Column(String(512), default='')
     bgOffsetX = Column(Integer, default=0)
     bgOffsetY = Column(Integer, default=0)
-    following = relationship('Mod', secondary=mod_followers, backref='followers')
+    following = relationship('Mod', secondary=Following.__table__, backref='followers')
     dark_theme = Column(Boolean, default=False)
 
     def set_password(self, password: str) -> None:
