@@ -55,6 +55,14 @@
     padding-bottom: 50px;
 }
 
+.row .CodeMirror {
+    height: 12em;
+}
+
+.has-error .CodeMirror {
+    border: 1px solid #a94442;
+}
+
 .upload-mod {
     border: 5px dotted #ccc;
     background: inherit;

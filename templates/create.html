@@ -39,7 +39,7 @@
                 <h2 class="control-label">Short description</h2>
             </div>
             <div class="col-md-8 form-group">
-                <input id="mod-short-description" class="form-control input-lg" type="text" maxLength=1000 />
+                <input id="mod-short-description" class="form-control input-lg" type="text" placeholder="A few words summarizing this mod" maxLength=1000 />
             </div>
         </div>
         <div class="row">
@@ -75,10 +75,16 @@
             <div class="col-md-8 form-group">
                 <select id="mod-license" class="chosen-select">
                     <option value="MIT" selected>MIT</option>
-                    <option value="BSD">BSD</option>
-                    <option value="GPLv2">GPLv2</option>
-                    <option value="GPLv3">GPLv3</option>
+                    <option value="CC-BY">CC-BY</option>
+                    <option value="CC-BY-SA">CC-BY-SA</option>
+                    <option value="CC-BY-ND">CC-BY-ND</option>
+                    <option value="CC-BY-NC-SA">CC-BY-NC-SA</option>
+                    <option value="CC-BY-NC-ND">CC-BY-NC-ND</option>
+                    <option value="CC0">CC0</option>
+                    <option value="GPL-2.0">GPL-2.0</option>
+                    <option value="GPL-3.0">GPL-3.0</option>
                     <option value="LGPL">LGPL</option>
+                    <option value="BSD">BSD</option>
                     <option value="Other">Other</option>
                 </select>
                 <input id="mod-other-license" type="text" class="form-control input-lg hidden"
@@ -94,6 +100,14 @@
                     <span class="glyphicon glyphicon-question-sign" data-toggle="tooltip" data-placement="left"
                         title="This makes it so that users can automate the installation of your mod. Your mod won't be added to CKAN until you publish it."></span>
                 </label>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <h2 class="control-label">Long description</h2>
+            </div>
+            <div class="col-md-8 form-group">
+                <textarea class="form-control input-block-level" name="description" id="description"></textarea>
             </div>
         </div>
         <div class="row">
