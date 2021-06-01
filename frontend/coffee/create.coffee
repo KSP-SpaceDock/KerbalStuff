@@ -1,3 +1,5 @@
+editor = new Editor()
+editor.render()
 dropzone = require('dropzone')
 
 error = (name) ->
@@ -10,6 +12,7 @@ valid = ->
 
     error('mod-name') if $("#mod-name").val() == ''
     error('mod-short-description') if $("#mod-short-description").val() == ''
+    error('description') if editor.codemirror.getValue() == ''
     error('mod-license') if $("#mod-license").val() == ''
     error('mod-version') if $("#mod-version").val() == ''
     error('mod-game') if $("#mod-game").val() == null
@@ -42,6 +45,7 @@ dropzone.options.uploader =
             'dzchunkindex': chunk.index,
             'name': $("#mod-name").val(),
             'short-description': $("#mod-short-description").val(),
+            'description': editor.codemirror.getValue(),
             'version': $("#mod-version").val(),
             'game-id': $('#mod-game').val(),
             'game-version': $('#mod-game-version').val(),

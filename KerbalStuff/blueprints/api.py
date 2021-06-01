@@ -605,6 +605,7 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
         return {'error': True, 'reason': 'Only users with public profiles may create mods.'}, 403
     mod_name = request.form.get('name')
     short_description = request.form.get('short-description')
+    description = request.form.get('description', default_description)
     mod_friendly_version = secure_filename(request.form.get('version', ''))
     # 'game' is deprecated, but kept for compatibility
     game_id = request.form.get('game-id') or request.form.get('game')
@@ -662,7 +663,7 @@ def create_mod() -> Tuple[Dict[str, Any], int]:
         mod = Mod(user=current_user,
                   name=mod_name,
                   short_description=short_description,
-                  description=default_description,
+                  description=description,
                   license=mod_licence,
                   ckan=(request.form.get('ckan', '').lower() in TRUE_STR),
                   game=game,
