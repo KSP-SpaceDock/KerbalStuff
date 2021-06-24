@@ -208,7 +208,7 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
                            })
 
 
-@mods.route("/mods/<int:mod_id>/<path:mod_name>/background")
+@mods.route("/mod/<int:mod_id>/<path:mod_name>/background")
 def mod_background(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
     mod, _ = _get_mod_game_info(mod_id)
     if not mod:
@@ -225,7 +225,7 @@ def mod_background(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
     return sendfile(mod.background, False)
 
 
-@mods.route("/mods/<int:mod_id>/<path:mod_name>/thumb")
+@mods.route("/mod/<int:mod_id>/<path:mod_name>/thumb")
 def mod_thumbnail(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
     mod, _ = _get_mod_game_info(mod_id)
     if not mod:

@@ -1,9 +1,13 @@
 import os.path
+from typing import TYPE_CHECKING, Optional
 
 from PIL import Image
 from flask import url_for
 
 from KerbalStuff.config import _cfg, _cfgi, site_logger
+
+if TYPE_CHECKING:
+    from KerbalStuff.objects import Mod
 
 
 def create(background_path: str, thumbnail_path: str) -> None:
@@ -53,7 +57,7 @@ def create(background_path: str, thumbnail_path: str) -> None:
 
 
 # Returns the URL for the thumbnail
-def get_or_create(mod):  # type: ignore # (would cause a circular import)
+def get_or_create(mod: 'Mod') -> Optional[str]:
     storage = _cfg('storage')
     protocol = _cfg('protocol')
     cdn_domain = _cfg('cdn-domain')
@@ -64,7 +68,7 @@ def get_or_create(mod):  # type: ignore # (would cause a circular import)
     #   /content/admin_1/mod_name/mod_tame-time.stamp.png
     #   admin_1/mod_name/mod_tame-timestamp.png
     if mod.background.startswith('/content/'):
-        mod.background = mod.background[8:]
+        mod.background = mod.background[9:]
 
     thumb_path = thumb_path_from_background_path(mod.background)
 

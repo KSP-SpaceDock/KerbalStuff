@@ -85,12 +85,12 @@ class User(Base):  # type: ignore
         # Fix old db data
         # str.removeprefix is only available in Python3.9+
         if self.backgroundMedia.startswith('/content/'):
-            self.backgroundMedia = self.backgroundMedia[8:]
+            self.backgroundMedia = self.backgroundMedia[9:]
         # Directly return the CDN path if we have any, so we don't have a redirect that breaks caching.
         if protocol and cdn_domain:
             return f'{protocol}://{cdn_domain}/{self.backgroundMedia}'
         else:
-            return url_for('profiles.profile_background', username=self.username)
+            return url_for('profile.profile_background', username=self.username)
 
     # Flask.Login stuff
     # We don't use most of these features
@@ -211,7 +211,7 @@ class Mod(Base):  # type: ignore
     download_count = Column(Integer, nullable=False, default=0)
     ckan = Column(Boolean)
 
-    def background_thumb(self) -> str:
+    def background_thumb(self) -> Optional[str]:
         return thumbnail.get_or_create(self)
 
     def base_path(self) -> str:
