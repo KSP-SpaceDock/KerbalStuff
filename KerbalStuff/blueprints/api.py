@@ -176,6 +176,10 @@ def _update_image(old_path: str, base_name: str, base_path: str) -> Optional[str
         os.makedirs(full_path)
     try:
         os.remove(os.path.join(storage, old_path))
+        # Remove the containing folder if empty
+        folder = os.path.dirname(os.path.join(storage, old_path))
+        if not os.listdir(folder):
+            os.rmdir(folder)
     except:
         pass  # who cares
     f.save(os.path.join(full_path, filename))
