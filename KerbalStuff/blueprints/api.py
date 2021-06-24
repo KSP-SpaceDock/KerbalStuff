@@ -184,7 +184,7 @@ def _update_image(old_path: str, base_name: str, base_path: str) -> Optional[str
 
 def _get_modversion_paths(mod_name: str, friendly_version: str) -> Tuple[str, str]:
     mod_name_sec = secure_filename(mod_name)
-    base_path = os.path.join(f'{current_user.base_path()}', mod_name_sec)
+    base_path = os.path.join(current_user.base_path(), mod_name_sec)
     storage = _cfg('storage')
     if not storage:
         return '', ''
