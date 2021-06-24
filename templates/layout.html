@@ -33,10 +33,7 @@
         {% endblock %}
         <link href="/static/bootstrap.min.css" rel="stylesheet">
         <link href="/static/bootstrap-theme.css" rel="stylesheet">
-
-
         {% block styles %}
-
         {% endblock %}
         <!-- Piwik -->
           {% if admin %}
@@ -68,16 +65,14 @@
                         <span class="icon-bar"></span>
                     </button>
                     <a class="navbar-brand space-left-right" id="pagetitle" href="/" style="display: inline;vertical-align: middle;padding-top: 2.5mm;margin-right: 0;padding-right: 0; width: auto; ">
-
-
-<span class="darker"><img class="logoimg" src="/static/logo4.png" alt="SpaceDock" border="0" height="85%"/> {% if ga %}<img class="sublogo" src="/static/sublogo.png" alt=">" border="0" height="85%"/>&nbsp;<a style="position: relative; top: 3mm;" class="gamename" href="/{{ ga.short }}">{{ ga.name }}</a>{% endif %}</span>
-
+                        <span class="darker">
+                            <img class="logoimg" src="/static/logo4.png" alt="SpaceDock" border="0" height="85%"/>
+                            {%- if ga -%}
+                            <img class="sublogo" src="/static/sublogo.png" alt=">" border="0" height="85%"/>&nbsp;
+                            <a style="position: relative; top: 3mm;" class="gamename" href="/{{ ga.short }}">{{ ga.name }}</a>
+                            {%- endif -%}
+                        </span>
                     </a>
-<!--
-                    {% if admin %}
-                    <p class="navbar-text" style="color: white">Admin</p>
-                    {% endif %}
--->
                 </div>
                 <div class="collapse navbar-collapse" id="navbar-collapse">
                     {% if not user %}

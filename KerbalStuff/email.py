@@ -1,5 +1,5 @@
 import html
-from typing import Iterable, List, Dict
+from typing import Iterable
 
 from flask import url_for
 from jinja2 import Template

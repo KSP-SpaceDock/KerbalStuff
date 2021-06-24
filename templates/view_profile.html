@@ -6,8 +6,8 @@
 <title>{{ profile.username }} on {{ site_name }}</title>
 {% endblock %}
 {% block body %}
-{% if profile.backgroundMedia %}
-<div class="header" style="background-image: url({{ profile.backgroundMedia }});
+{% if background %}
+<div class="header" style="background-image: url({{ background }});
     background-position: 0 {% if profile.bgOffsetY %}{{ profile.bgOffsetY }}px{% else %}0{% endif %};"></div>
 {% endif %}
 <div class="container lead">

@@ -9,11 +9,7 @@
 {% block body %}
 <form action="{{ url_for("mods.edit_mod", mod_id=mod.id, mod_name=mod.name) }}" method="POST">
     <div class="header upload-well scrollable" id="header-well" style="
-        {% if mod.background %}
-        background-image: url({{ mod.background }});
-        {% else %}
-        background-image: url(/static/background.jpg);
-        {% endif %}
+        background-image: url({{ background if background else '/static/background.jpg' }});
         background-position: 0 {% if mod.bgOffsetY %}{{ mod.bgOffsetY }}px{% else %}0{% endif %};
         background-color: #ddd;"
         data-event="upload_bg"

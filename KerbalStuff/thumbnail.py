@@ -1,6 +1,7 @@
 import os.path
 
 from PIL import Image
+from flask import url_for
 
 from KerbalStuff.config import _cfg, _cfgi, site_logger
 
@@ -51,23 +52,41 @@ def create(background_path: str, thumbnail_path: str) -> None:
     im.save(thumbnail_path, 'jpeg', quality=quality, optimize=True)
 
 
-def get_or_create(background_url: str) -> str:
+# Returns the URL for the thumbnail
+def get_or_create(mod):  # type: ignore # (would cause a circular import)
     storage = _cfg('storage')
+    protocol = _cfg('protocol')
+    cdn_domain = _cfg('cdn-domain')
     if not storage:
-        return background_url
+        return mod.background_url(protocol, cdn_domain)
 
-    (background_directory, background_file_name) = os.path.split(background_url)
+    # mod.background can have the following forms:
+    #   /content/admin_1/mod_name/mod_tame-time.stamp.png
+    #   admin_1/mod_name/mod_tame-timestamp.png
+    if mod.background.startswith('/content/'):
+        mod.background = mod.background[8:]
 
-    thumb_file_name = os.path.splitext(background_file_name)[0] + '.jpg'
-    thumb_url = os.path.join(background_directory, 'thumb_' + thumb_file_name)
+    thumb_path = thumb_path_from_background_path(mod.background)
 
-    thumb_disk_path = os.path.join(storage, thumb_url.replace('/content/', ''))
-    background_disk_path = os.path.join(storage, background_url.replace('/content/', ''))
+    thumb_disk_path = os.path.join(storage, thumb_path)
+    background_disk_path = os.path.join(storage, mod.background)
 
     if not os.path.isfile(thumb_disk_path):
         try:
             create(background_disk_path, thumb_disk_path)
         except Exception as e:
             site_logger.exception(e)
-            return background_url
-    return thumb_url
+            return mod.background_url(protocol, cdn_domain)
+
+    # Directly return the CDN path if we have any, so we don't have a redirect that breaks caching.
+    if protocol and cdn_domain:
+        return f'{protocol}://{cdn_domain}/{thumb_path}'
+    else:
+        return url_for('mods.mod_thumbnail', mod_id=mod.id, mod_name=mod.name)
+
+
+def thumb_path_from_background_path(background_path: str) -> str:
+    (background_directory, background_file_name) = os.path.split(background_path)
+
+    thumb_file_name = 'thumb_' + os.path.splitext(background_file_name)[0] + '.jpg'
+    return os.path.join(background_directory,  thumb_file_name)

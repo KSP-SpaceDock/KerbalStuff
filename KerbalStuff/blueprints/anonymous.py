@@ -7,7 +7,7 @@ from sqlalchemy import desc
 from datetime import timezone
 
 from ..common import dumb_object, paginate_query, get_paginated_mods, get_game_info, get_games, \
-    get_featured_mods, get_top_mods, get_new_mods, get_updated_mods
+    get_featured_mods, get_top_mods, get_new_mods, get_updated_mods, sendfile
 from ..config import _cfg
 from ..database import db
 from ..objects import Featured, Mod, ModVersion, User
@@ -48,27 +48,7 @@ def content(path: str) -> werkzeug.wrappers.Response:
     if not storage:
         abort(404)
 
-    if _cfg('use-x-accel') == 'nginx':
-        response = make_response('')
-        response.headers['Content-Type'] = 'application/zip'
-        response.headers['Content-Disposition'] = f'attachment; filename={os.path.basename(path)}'
-        response.headers['X-Accel-Redirect'] = '/internal/' + path
-        return response
-
-    download_path = os.path.join(storage, path)
-
-    if _cfg('use-x-accel') == 'apache':
-        response = make_response('')
-        response.headers['Content-Type'] = 'application/zip'
-        response.headers['Content-Disposition'] = f'attachment; filename={os.path.basename(path)}'
-        response.headers['X-Sendfile'] = download_path
-        return response
-
-    else:
-        # No accelerator enabled, try to send it ourselves
-        if not os.path.isfile(download_path):
-            abort(404)
-        return make_response(send_file(download_path, as_attachment=True))
+    return sendfile(path, True)
 
 
 @anonymous.route("/browse")

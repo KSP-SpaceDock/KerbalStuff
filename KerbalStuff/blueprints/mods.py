@@ -19,19 +19,19 @@ from flask_login import current_user
 from sqlalchemy import desc
 from urllib.parse import urlparse
 from urllib3.util import connection
-from werkzeug.utils import secure_filename
 
 from .api import default_description
 from ..ckan import send_to_ckan, notify_ckan
 from ..common import get_game_info, set_game_info, with_session, dumb_object, loginrequired, \
     json_output, adminrequired, check_mod_editable, TRUE_STR, \
-    get_referral_events, get_download_events, get_follow_events, get_games
+    get_referral_events, get_download_events, get_follow_events, get_games, sendfile
 from ..config import _cfg
 from ..database import db
 from ..email import send_autoupdate_notification, send_mod_locked
 from ..objects import Mod, ModVersion, DownloadEvent, FollowEvent, ReferralEvent, \
     Featured, Media, GameVersion, Game
 from ..search import get_mod_score
+from ..thumbnail import thumb_path_from_background_path
 
 mods = Blueprint('mods', __name__, template_folder='../../templates/mods')
 
@@ -203,8 +203,43 @@ def mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Response]:
                                'total_authors': total_authors,
                                "site_name": _cfg('site-name'),
                                'ga': ga,
-                               'size_versions': size_versions
+                               'size_versions': size_versions,
+                               'background': mod.background_url(_cfg('protocol'), _cfg('cdn-domain')),
                            })
+
+
+@mods.route("/mods/<int:mod_id>/<path:mod_name>/background")
+def mod_background(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
+    mod, _ = _get_mod_game_info(mod_id)
+    if not mod:
+        abort(404)
+    if not mod.published:
+        if not current_user:
+            abort(401)
+        if current_user.id != mod.user_id:
+            if not current_user.admin:
+                abort(403)
+
+    if mod.background.startswith('/content/'):
+        mod.background = mod.background[9:]
+    return sendfile(mod.background, False)
+
+
+@mods.route("/mods/<int:mod_id>/<path:mod_name>/thumb")
+def mod_thumbnail(mod_id: int, mod_name: str) -> werkzeug.wrappers.Response:
+    mod, _ = _get_mod_game_info(mod_id)
+    if not mod:
+        abort(404)
+    if not mod.published:
+        if not current_user:
+            abort(401)
+        if current_user.id != mod.user_id:
+            if not current_user.admin:
+                abort(403)
+
+    if mod.background.startswith('/content/'):
+        mod.background = mod.background[9:]
+    return sendfile(thumb_path_from_background_path(mod.background), False)
 
 
 @mods.route("/mod/<int:mod_id>/<path:mod_name>/edit", methods=['GET', 'POST'])
@@ -216,6 +251,7 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
     if request.method == 'GET':
         original = current_user == mod.user
         return render_template("edit_mod.html", mod=mod, original=original,
+                               background=mod.background_url(_cfg('protocol'), _cfg('cdn-domain')),
                                new=request.args.get('new') is not None and original)
     else:
         short_description = request.form.get('short-description')
@@ -225,7 +261,6 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         source_link = request.form.get('source-link')
         description = request.form.get('description')
         ckan = request.form.get('ckan')
-        background = request.form.get('background')
         bgOffsetY = request.form.get('bg-offset-y', 0)
         mod.license = license
         mod.donation_link = donation_link
@@ -268,9 +303,6 @@ def edit_mod(mod_id: int, mod_name: str) -> Union[str, werkzeug.wrappers.Respons
         elif mod.ckan:
             # Badge checked previously, notify
             notify_ckan(mod, 'edit')
-
-        if background and background != '':
-            mod.background = background
         try:
             mod.bgOffsetY = int(bgOffsetY)
         except:
@@ -332,20 +364,20 @@ def delete(mod_id: int) -> werkzeug.wrappers.Response:
             editable = True
     if not editable:
         abort(403)
-    db.delete(mod)
     for featured in Featured.query.filter(Featured.mod_id == mod.id).all():
         db.delete(featured)
     for media in Media.query.filter(Media.mod_id == mod.id).all():
         db.delete(media)
+    for referral in ReferralEvent.query.filter(ReferralEvent.mod_id == mod.id).all():
+        db.delete(referral)
     for version in ModVersion.query.filter(ModVersion.mod_id == mod.id).all():
         db.delete(version)
-    base_path = os.path.join(secure_filename(mod.user.username) + '_' +
-                             str(mod.user.id), secure_filename(mod.name))
+    db.delete(mod)
     db.commit()
     notify_ckan(mod, 'delete', True)
     storage = _cfg('storage')
     if storage:
-        full_path = os.path.join(storage, base_path)
+        full_path = os.path.join(storage, mod.base_path())
         rmtree(full_path)
     return redirect("/profile/" + current_user.username)
 
@@ -551,25 +583,7 @@ def download(mod_id: int, mod_name: Optional[str], version: Optional[str]) -> Op
     if protocol and cdn_domain:
         return redirect(protocol + '://' + cdn_domain + '/' + mod_version.download_path, code=302)
 
-    response = None
-    if _cfg("use-x-accel") == 'nginx':
-        response = make_response("")
-        response.headers['Content-Type'] = 'application/zip'
-        response.headers['Content-Disposition'] = 'attachment; filename=' + \
-            os.path.basename(mod_version.download_path)
-        response.headers['X-Accel-Redirect'] = '/internal/' + mod_version.download_path
-    if _cfg("use-x-accel") == 'apache':
-        response = make_response("")
-        response.headers['Content-Type'] = 'application/zip'
-        response.headers['Content-Disposition'] = 'attachment; filename=' + \
-            os.path.basename(mod_version.download_path)
-        response.headers['X-Sendfile'] = os.path.join(storage, mod_version.download_path)
-    if response is None:
-        download_path = os.path.join(storage, mod_version.download_path)
-        if not os.path.isfile(download_path):
-            abort(404)
-        response = make_response(send_file(download_path, as_attachment=True))
-    return response
+    return sendfile(mod_version.download_path)
 
 
 _orig_create_connection = connection.create_connection
@@ -597,8 +611,11 @@ def delete_version(mod_id: int, version_id: str) -> werkzeug.wrappers.Response:
         # Only one thread is allowed to mess with connection.create_connection at a time
         with _create_connection_mutex:
             connection.create_connection = create_connection_cdn_purge
-            requests.request('PURGE',
-                protocol + '://' + cdn_domain + '/' + version[0].download_path)
+            try:
+                requests.request('PURGE',
+                                 protocol + '://' + cdn_domain + '/' + version[0].download_path)
+            except requests.exceptions.RequestException:
+                pass
             global _orig_create_connection
             connection.create_connection = _orig_create_connection
 
