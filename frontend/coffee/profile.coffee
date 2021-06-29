@@ -24,7 +24,6 @@ window.upload_bg = (files, box) ->
         else
             resp = JSON.parse(xhr.responseText)
             p.textContent = 'Done!'
-            document.getElementById('backgroundMedia').value = resp.path
             document.getElementById('header-well').style.backgroundImage = 'url("' + resp.path + '")'
             setTimeout(() ->
                 box.removeChild(p)

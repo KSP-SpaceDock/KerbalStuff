@@ -176,6 +176,10 @@ def _update_image(old_path: str, base_name: str, base_path: str) -> Optional[str
         os.makedirs(full_path)
     try:
         os.remove(os.path.join(storage, old_path))
+        # Remove the containing folder if empty
+        folder = os.path.dirname(os.path.join(storage, old_path))
+        if not os.listdir(folder):
+            os.rmdir(folder)
     except:
         pass  # who cares
     f.save(os.path.join(full_path, filename))
@@ -184,18 +188,17 @@ def _update_image(old_path: str, base_name: str, base_path: str) -> Optional[str
 
 def _get_modversion_paths(mod_name: str, friendly_version: str) -> Tuple[str, str]:
     mod_name_sec = secure_filename(mod_name)
-    storage_base = os.path.join(f'{secure_filename(current_user.username)}_{current_user.id!s}',
-                                mod_name_sec)
+    base_path = os.path.join(current_user.base_path(), mod_name_sec)
     storage = _cfg('storage')
     if not storage:
-        return ('', '')
-    storage_path = os.path.join(storage, storage_base)
+        return '', ''
+    storage_path = os.path.join(storage, base_path)
     filename = f'{mod_name_sec}-{friendly_version}.zip'
     if not os.path.exists(storage_path):
         os.makedirs(storage_path)
     full_path = os.path.join(storage_path, filename)
     # Return tuple of (full path, relative path)
-    return (full_path, os.path.join(storage_base, filename))
+    return full_path, os.path.join(base_path, filename)
 
 
 def serialize_mod_list(mods: Iterable[Mod]) -> Iterable[Dict[str, Any]]:
@@ -458,13 +461,12 @@ def update_mod_background(mod_id: int) -> Dict[str, Any]:
     mod = _get_mod(mod_id)
     _check_mod_editable(mod)
     seq_mod_name = secure_filename(mod.name)
-    base_name = f'{seq_mod_name}-{time.time()!s}'
-    base_path = os.path.join(f'{secure_filename(mod.user.username)}_{mod.user.id!s}', seq_mod_name)
-    new_path = _update_image(mod.background, base_name, base_path)
+    base_name = f'{seq_mod_name}-{int(time.time())}'
+    new_path = _update_image(mod.background, base_name, mod.base_path())
     if new_path:
         mod.background = new_path
         notify_ckan(mod, 'update-background')
-        return {'path': '/content/' + new_path}
+        return {'path': mod.background_url(_cfg('protocol'), _cfg('cdn-domain'))}
     return {'path': None}
 
 
@@ -476,12 +478,13 @@ def update_user_background(username: str) -> Union[Dict[str, Any], Tuple[Dict[st
     if not current_user.admin and current_user.username != username:
         return {'error': True, 'reason': 'You are not authorized to edit this user\'s background'}, 403
     user = User.query.filter(User.username == username).first()
-    base_name = secure_filename(user.username)
-    base_path = f'{base_name}-{time.time()!s}_{user.id!s}'
-    new_path = _update_image(user.backgroundMedia, base_name, base_path)
+    seq_username = secure_filename(user.username)
+    base_name = f'{seq_username}-header-{int(time.time())}'
+    new_path = _update_image(user.backgroundMedia, base_name, user.base_path())
     if new_path:
         user.backgroundMedia = new_path
-        return {'path': '/content/' + new_path}
+        # The frontend needs the new path so it can show the updated image
+        return {'path': user.background_url(_cfg('protocol'), _cfg('cdn-domain'))}
     return {'path': None}
 
 

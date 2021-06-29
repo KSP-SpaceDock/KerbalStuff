@@ -1,5 +1,6 @@
 import json
 import math
+import mimetypes
 import urllib.parse
 import os
 import re
@@ -10,13 +11,14 @@ from typing import Union, List, Any, Optional, Callable, Tuple, Iterable
 import bleach
 import werkzeug.wrappers
 from bleach_allowlist import bleach_allowlist
-from flask import jsonify, redirect, request, Response, abort, session
+from flask import jsonify, redirect, request, Response, abort, session, send_file, make_response
 from flask_login import current_user
 from markupsafe import Markup
 from sqlalchemy import desc
 from werkzeug.exceptions import HTTPException
 from sqlalchemy.orm import Query
 
+from .config import _cfg
 from .custom_json import CustomJSONEncoder
 from .database import db, Base
 from .objects import Game, Mod, Featured, ModVersion, ReferralEvent, DownloadEvent, FollowEvent
@@ -265,8 +267,42 @@ def jsonify_exception(e: Exception) -> werkzeug.wrappers.Response:
         }, cls=CustomJSONEncoder, separators=(',', ':'))
         return response
     else:
+        # We deliberately loose the original message here because it can contain confidential data.
         return json_response({
             "error": True,
             "code": 500,
-            "reason": f'500 Internal Server Error: {str(e)}',
+            "reason": f'500 Internal Server Error: Clearly you\'ve broken something. '
+                      f'Maybe if you refresh no one will notice.',
         }, 500)
+
+
+# Returns a file using X-Sendfile / X-Accel-Redirect if configured, or serving it directly.
+def sendfile(path: str, attachment: bool = True) -> werkzeug.wrappers.Response:
+    storage = _cfg('storage')
+    if not storage:
+        abort(404)
+
+    response = None
+    if _cfg("use-x-accel") == 'nginx':
+        response = make_response("")
+        # mimetypes guesses the mimetype from file extension, it does not access the disk
+        response.headers['Content-Type'] = mimetypes.guess_type(path)[0]
+        if attachment:
+            response.headers['Content-Disposition'] = 'attachment; filename=' + os.path.basename(path)
+        else:
+            response.headers['Content-Disposition'] = 'inline'
+        response.headers['X-Accel-Redirect'] = '/internal/' + path
+    if _cfg("use-x-accel") == 'apache':
+        response = make_response("")
+        response.headers['Content-Type'] = mimetypes.guess_type(path)[0]
+        if attachment:
+            response.headers['Content-Disposition'] = 'attachment; filename=' + os.path.basename(path)
+        else:
+            response.headers['Content-Disposition'] = 'inline'
+        response.headers['X-Sendfile'] = os.path.join(storage, path)
+    if response is None:
+        download_path = os.path.join(storage, path)
+        if not os.path.isfile(download_path):
+            abort(404)
+        response = make_response(send_file(download_path, as_attachment=attachment))
+    return response

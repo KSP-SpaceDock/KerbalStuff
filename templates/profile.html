@@ -8,7 +8,7 @@
 {% block body %}
 <form action="/profile/{{ profile.username }}/edit" method="POST">
     <div class="header upload-well scrollable" id="header-well" style="
-        {%if profile.backgroundMedia%}background-image: url({{ profile.backgroundMedia }});{%endif%}
+        {% if background %}background-image: url({{ background }});{% endif %}
         background-position: 0 {% if profile.bgOffsetY %}{{ profile.bgOffsetY }}px{% else %}0{% endif %};
         background-color: #ddd;"
         data-event="upload_bg"
@@ -18,7 +18,6 @@
         <div class="upload-progress"></div>
         <div class="directions"><span class="glyphicon glyphicon-resize-vertical"></span>Click and drag to move <span class="glyphicon glyphicon-resize-vertical"></span></div>
     </div>
-    <input type="hidden" name="backgroundMedia" id="backgroundMedia" value="{{ profile.backgroundMedia }}">
     <input type="hidden" name="bg-offset-y" id="bg-offset-y" value="{% if profile.bgOffsetY %}{{ profile.bgOffsetY }}{% endif %}">
     <div class="container lead">
         <div class="row">

@@ -40,6 +40,14 @@ http {
             proxy_read_timeout 90;
             expires -1;
         }
+
+        location /internal {
+            internal;
+            alias /var/www/storage;
+            proxy_read_timeout 90;
+            expires 7d;
+            add_header Via "HTTP/1.1 nginx.sendfile";
+        }
         
         location / {
             proxy_pass http://backend:9999;

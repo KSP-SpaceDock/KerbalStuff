@@ -82,6 +82,8 @@ services:
       - 5443:443
     links:
       - backend
+    volumes:
+      - ./storage:/var/www/storage
     networks:
       - spacedock-net
 
