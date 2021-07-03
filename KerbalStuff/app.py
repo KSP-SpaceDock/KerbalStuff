@@ -26,6 +26,7 @@ from .blueprints.lists import lists
 from .blueprints.login_oauth import list_defined_oauths, login_oauth
 from .blueprints.mods import mods
 from .blueprints.profile import profiles
+from .middleware.session_interface import OnlyLoggedInSessionInterface
 from .celery import update_from_github
 from .common import first_paragraphs, many_paragraphs, json_output, jsonify_exception, dumb_object, sanitize_text
 from .config import _cfg, _cfgb, _cfgd, _cfgi, site_logger
@@ -54,6 +55,7 @@ app.jinja_env.filters['bleach'] = sanitize_text
 app.jinja_env.auto_reload = app.debug
 app.secret_key = _cfg("secret-key")
 app.json_encoder = CustomJSONEncoder
+app.session_interface = OnlyLoggedInSessionInterface()
 Markdown(app, extensions=[KerbDown(), 'fenced_code'])
 login_manager = LoginManager(app)
 
