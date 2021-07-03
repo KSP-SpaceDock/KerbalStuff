@@ -9,13 +9,15 @@
 """
 
 from typing import List, Optional
-from sqlalchemy import sa
+
+import sqlalchemy.sql.type_api
+import sqlalchemy as sa
 
 
 class op:
 
     @classmethod
-    def get_bind(cls) -> None: ...
+    def get_bind(cls) -> sa.engine.Connection: ...
 
     @classmethod
     def f(cls,
@@ -35,6 +37,7 @@ class op:
     def alter_column(cls,
                     table_name: str,
                     column_name: str,
+                    existing_type: Optional[sa.sql.type_api.TypeEngine] = None,
                     nullable: Optional[bool] = None) -> None: ...
 
     @classmethod
@@ -58,6 +61,12 @@ class op:
                            remote_cols: List[str],
                            onupdate: Optional[str] = None,
                            ondelete: Optional[str] = None) -> None: ...
+
+    @classmethod
+    def create_primary_key(cls,
+                           constraint_name: str,
+                           table_name: str,
+                           columns: List[str]) -> None: ...
 
     @classmethod
     def drop_constraint(cls,

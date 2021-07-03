@@ -10,7 +10,6 @@ Create Date: 2021-06-28 19:00:00
 revision = '17fbd4ff8193'
 down_revision = '426e0b848d77'
 
-from datetime import datetime
 from alembic import op
 import sqlalchemy as sa
 
@@ -37,10 +36,18 @@ class Following(Base):  # type: ignore
 
 
 def upgrade() -> None:
-    op.create_index(op.f('ix_mod_followers_user_id'), 'mod_followers', ['user_id'], unique=False)
-    op.create_index(op.f('ix_mod_followers_mod_id'), 'mod_followers', ['mod_id'], unique=False)
-    op.create_index(op.f('ix_mod_followers_user_id_mod_id'), 'mod_followers', ['user_id', 'mod_id'], unique=True)
+    # Remove any broken rows
+    op.execute("DELETE FROM mod_followers WHERE mod_id is NULL OR user_id is NULL")
+    # Make new primary key columns non-nullable
+    op.alter_column('mod_followers', 'mod_id',  existing_type=sa.INTEGER(), nullable=False)
+    op.alter_column('mod_followers', 'user_id', existing_type=sa.INTEGER(), nullable=False)
 
+    # Create indices
+    op.create_index(op.f('ix_mod_followers_mod_id'), 'mod_followers', ['mod_id'], unique=False)
+    op.create_index(op.f('ix_mod_followers_user_id'), 'mod_followers', ['user_id'], unique=False)
+    op.create_primary_key('pk_mod_followers', 'mod_followers', ['mod_id', 'user_id'])
+
+    # Add new columns, nullable
     op.add_column('mod_followers', sa.Column('send_update', sa.Boolean()))
     op.add_column('mod_followers', sa.Column('send_autoupdate', sa.Boolean()))
 
@@ -51,6 +58,9 @@ def upgrade() -> None:
         following.send_autoupdate = True
     session.commit()
 
+    # Make new columns non-nullable
+    op.alter_column('mod_followers', 'send_update',     existing_type=sa.INTEGER(), nullable=False)
+    op.alter_column('mod_followers', 'send_autoupdate', existing_type=sa.INTEGER(), nullable=False)
 
 
 def downgrade() -> None:
@@ -58,4 +68,6 @@ def downgrade() -> None:
     op.drop_column('mod_followers', 'send_autoupdate')
     op.drop_index(op.f('ix_mod_followers_user_id'), table_name='mod_followers')
     op.drop_index(op.f('ix_mod_followers_mod_id'), table_name='mod_followers')
-    op.drop_index(op.f('ix_mod_followers_user_id_mod_id'), table_name='mod_followers')
+    op.drop_constraint('pk_mod_followers', 'mod_followers')
+    op.alter_column('mod_followers', 'mod_id',  existing_type=sa.INTEGER(), nullable=True)
+    op.alter_column('mod_followers', 'user_id', existing_type=sa.INTEGER(), nullable=True)
