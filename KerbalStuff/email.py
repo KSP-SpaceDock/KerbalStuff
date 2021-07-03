@@ -102,7 +102,7 @@ def send_update_notification(mod: Mod, version: ModVersion, user: User) -> None:
             'url': '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64],
             'changelog': changelog
         }))
-    subject = user.username + " has just updated " + mod.name + "!"
+    subject = f'{user.username} has just updated {mod.name}!'
     send_mail.delay(_cfg('support-mail'), targets, subject, message)
 
 
@@ -127,8 +127,7 @@ def send_autoupdate_notification(mod: Mod) -> None:
             'url': '/mod/' + str(mod.id) + '/' + secure_filename(mod.name)[:64],
             'changelog': changelog
         }))
-    subject = mod.name + " is compatible with " + \
-              mod.game.name + mod.versions[0].gameversion.friendly_version + "!"
+    subject = f'{mod.name} is compatible with {mod.game.name} {mod.versions[0].gameversion.friendly_version}!'
     send_mail.delay(_cfg('support-mail'), targets, subject, message)
 
 
