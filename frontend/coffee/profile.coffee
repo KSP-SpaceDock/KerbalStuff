@@ -1,3 +1,6 @@
+editor = new Editor()
+editor.render()
+
 # Background Uploading
 window.upload_bg = (files, box) ->
     file = files[0]
@@ -94,3 +97,8 @@ resetPasswordModalDialog = () ->
         button.removeAttribute('disabled')
 
 $('#change-password').on('hidden.bs.modal', resetPasswordModalDialog)
+
+$('#check-all-updates'      ).on('click', () -> $('[id^=updates-]'    ).prop('checked', true))
+$('#uncheck-all-updates'    ).on('click', () -> $('[id^=updates-]'    ).prop('checked', false))
+$('#check-all-autoupdates'  ).on('click', () -> $('[id^=autoupdates-]').prop('checked', true))
+$('#uncheck-all-autoupdates').on('click', () -> $('[id^=autoupdates-]').prop('checked', false))

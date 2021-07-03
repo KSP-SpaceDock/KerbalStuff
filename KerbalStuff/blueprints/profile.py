@@ -6,8 +6,8 @@ import werkzeug.wrappers
 from itertools import groupby
 
 from .login_oauth import list_connected_oauths, list_defined_oauths
-from ..common import loginrequired, with_session
-from ..objects import User
+from ..common import loginrequired, with_session, TRUE_STR
+from ..objects import User, Following
 
 profiles = Blueprint('profile', __name__, template_folder='../../templates/profiles')
 
@@ -66,10 +66,14 @@ def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
         for provider in oauth_providers:
             oauth_providers[provider]['has_auth'] = provider in extra_auths
 
+        following = sorted(Following.query.filter(Following.user_id == profile.id),
+                           key=lambda fol: fol.mod.name.lower())
+
         parameters = {
             'profile': profile,
             'oauth_providers': oauth_providers,
-            'hide_login': current_user != profile
+            'hide_login': current_user != profile,
+            'following': following
         }
         return render_template("profile.html", **parameters)
     else:
@@ -95,6 +99,9 @@ def profile(username: str) -> Union[str, werkzeug.wrappers.Response]:
             profile.bgOffsetX = int(bgOffsetX)
         if bgOffsetY:
             profile.bgOffsetY = int(bgOffsetY)
+        for fol in Following.query.filter(Following.user_id == profile.id):
+            fol.send_update = request.form.get(f'updates-{fol.mod_id}', '') in TRUE_STR
+            fol.send_autoupdate = request.form.get(f'autoupdates-{fol.mod_id}', '') in TRUE_STR
         return redirect("/profile/" + profile.username)
 
 

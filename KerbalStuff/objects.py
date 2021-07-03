@@ -6,15 +6,30 @@ from typing import Optional
 
 import bcrypt
 from sqlalchemy import Column, Integer, String, Unicode, Boolean, DateTime, \
-    ForeignKey, Table, Float, Index, BigInteger
+    ForeignKey, Float, Index, BigInteger, PrimaryKeyConstraint
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship, backref, reconstructor
 
 from . import thumbnail
 from .database import Base
 
-mod_followers = Table('mod_followers', Base.metadata,
-                      Column('mod_id', Integer, ForeignKey('mod.id')),
-                      Column('user_id', Integer, ForeignKey('user.id')))
+
+class Following(Base):  # type: ignore
+    __tablename__ = 'mod_followers'
+    __table_args__ = (PrimaryKeyConstraint('user_id', 'mod_id'), )
+    mod_id = Column(Integer, ForeignKey('mod.id'), index=True)
+    mod = relationship('Mod', back_populates='followings')
+    user_id = Column(Integer, ForeignKey('user.id'), index=True)
+    user = relationship('User', back_populates='followings')
+    send_update = Column(Boolean(), default=True, nullable=False)
+    send_autoupdate = Column(Boolean(), default=True, nullable=False)
+
+    def __init__(self, mod: Optional['Mod'] = None, user: Optional['User'] = None,
+                 send_update: Optional[bool] = True, send_autoupdate: Optional[bool] = True) -> None:
+        self.mod = mod
+        self.user = user
+        self.send_update = send_update
+        self.send_autoupdate = send_autoupdate
 
 
 class Featured(Base):  # type: ignore
@@ -63,7 +78,10 @@ class User(Base):  # type: ignore
     backgroundMedia = Column(String(512), default='')
     bgOffsetX = Column(Integer, default=0)
     bgOffsetY = Column(Integer, default=0)
-    following = relationship('Mod', secondary=mod_followers, backref='followers')
+    # List of Following objects
+    followings = relationship('Following', back_populates='user')
+    # List of mods the user follows
+    following = association_proxy('followings', 'mod')
     dark_theme = Column(Boolean, default=False)
 
     def set_password(self, password: str) -> None:
@@ -193,6 +211,10 @@ class Mod(Base):  # type: ignore
     follower_count = Column(Integer, nullable=False, default=0)
     download_count = Column(Integer, nullable=False, default=0)
     ckan = Column(Boolean)
+    # List of Following objects
+    followings = relationship('Following', back_populates='mod')
+    # List of users that follow this mods
+    followers = association_proxy('followings', 'user')
 
     def background_thumb(self) -> str:
         return thumbnail.get_or_create(self.background)
