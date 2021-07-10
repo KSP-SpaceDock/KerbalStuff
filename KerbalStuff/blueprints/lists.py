@@ -93,14 +93,18 @@ def edit_list(list_id: str, list_name: str) -> Union[str, werkzeug.wrappers.Resp
                                    'ga': ga
                                })
     else:
+        name = request.form.get('name', '')
         description = request.form.get('description')
         background = request.form.get('background')
         bgOffsetY = request.form.get('bg-offset-y', 0)
         mods = json.loads(request.form.get('mods', ''))
+        if not name or len(name) > 100:
+            abort(400)
         if any(mod_list.game != Mod.query.get(mod_id).game for mod_id in mods):
             # The client validates this in a more friendly way,
             # we just need to make sure nobody bypasses it
             abort(400)
+        mod_list.name = name
         mod_list.description = description
         if background and background != '':
             mod_list.background = background
